@@ -1,0 +1,13 @@
+{
+  "name": "vault-node-demo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.3",
+    "mysql2": "^3.11.0"
+  }
+}
+

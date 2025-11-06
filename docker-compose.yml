@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  vault:
+    image: hashicorp/vault:1.16
+    container_name: vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_DEV_ROOT_TOKEN_ID: "root"
+    command: vault server -dev -dev-root-token-id=root
+    cap_add:
+      - IPC_LOCK
+
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: demo
+    ports:
+      - "3306:3306"
+
+  nodeapp:
+    build: ./app
+    container_name: nodeapp
+    ports:
+      - "3000:3000"
+    environment:
+      VAULT_ADDR: "http://vault:8200"
+      VAULT_TOKEN: "root"
+      DB_SECRET_PATH: "secret/data/mysql"
+    depends_on:
+      - vault
+      - mysql
+
