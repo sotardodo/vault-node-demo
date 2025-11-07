@@ -9,7 +9,7 @@ services:
     environment:
       VAULT_ADDR: "http://0.0.0.0:8200"
       VAULT_DEV_ROOT_TOKEN_ID: "root"
-    command: vault server -dev -dev-root-token-id=root
+    command: vault server -dev -dev-listen-address=0.0.0.0:8200 -dev-root-token-id=root
     cap_add:
       - IPC_LOCK
 
@@ -28,10 +28,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      VAULT_ADDR: "http://vault:8200"
-      VAULT_TOKEN: "root"
+      VAULT_ADDR: "http://localhost:8200"
+      VAULT_TOKEN: "${VAULT_TOKEN}"
       DB_SECRET_PATH: "secret/data/mysql"
     depends_on:
       - vault
       - mysql
-
+    restart: on-failure

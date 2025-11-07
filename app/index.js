@@ -1,30 +1,42 @@
+const express = require("express");
 const mysql = require("mysql2/promise");
 const { getSecret } = require("./vault");
-const express = require("express");
+
 const app = express();
+const PORT = 3000;
 
-app.get("/", async (req, res) => {
-  try {
-    // Ambil rahasia dari Vault
-    const secret = await getSecret(process.env.DB_SECRET_PATH);
-    const { username, password, host } = secret;
+async function startServer() {
+  console.log("Starting app...");
 
-    // Koneksi ke MySQL
-    const connection = await mysql.createConnection({
-      host,
-      user: username,
-      password,
-      database: "demo",
-    });
+  // Ambil kredensial DB dari Vault
+  const secretPath = process.env.DB_SECRET_PATH || "secret/data/mysql";
+  const secrets = await getSecret(secretPath);
 
-    const [rows] = await connection.execute("SELECT NOW() AS now");
-    await connection.end();
+  const dbUser = secrets.username;
+  const dbPass = secrets.password;
 
-    res.json({ success: true, time: rows[0].now });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  console.log("Connecting to MySQL...");
+
+  const db = await mysql.createConnection({
+    host: "mysql",
+    user: dbUser,
+    password: dbPass,
+    database: "demo",
+  });
+
+  console.log("Connected to MySQL!");
+
+  app.get("/", async (req, res) => {
+    const [rows] = await db.query("SELECT NOW() AS time");
+    res.send(`✅ Vault + MySQL connected! Server time: ${rows[0].time}`);
+  });
+
+  app.listen(PORT, () => {
+    console.log(`Node.js app running on port ${PORT}`);
+  });
+}
+
+startServer().catch((err) => {
+  console.error("❌ Error starting app:", err.message);
+  process.exit(1);
 });
-
-app.listen(3000, () => console.log("✅ Node app running on port 3000"));
-
